@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LuckyBox - Scratch & Win</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: 'Segoe UI', 'Poppins', sans-serif;
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Auth Pages Styles */
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-box {
+            background: linear-gradient(135deg, #1e1e2e, #16162a);
+            border-radius: 30px;
+            padding: 40px 25px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.3);
+            width: 100%;
+        }
+        .auth-box h1 {
+            font-size: 36px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+        .auth-box p {
+            color: #aaa;
+            margin-bottom: 25px;
+        }
+        .auth-box input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 50px;
+            border: none;
+            margin: 8px 0;
+            font-size: 16px;
+            text-align: left;
+            padding-left: 20px;
+        }
+        .auth-box button {
+            width: 100%;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .auth-switch {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .auth-switch span {
+            color: #FFD700;
+            cursor: pointer;
+        }
+        .bonus-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #28a745;
+        }
+        .error-text {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #0f0f1a;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+            display: none;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a);
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .logo h1 {
+            font-size: 20px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .user-name {
+            font-size: 11px;
+            color: #FFD700;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        .balance-box {
+            background: rgba(0,0,0,0.6);
+            padding: 4px 10px;
+            border-radius: 30px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        .balance-label {
+            font-size: 9px;
+            color: #aaa;
+        }
+        .balance-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .header-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .withdraw-btn {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+        .logout-btn {
+            background: #333;
+        }
+        .history-btn {
+            background: #17a2b8;
+        }
+
+        /* Prize Header */
+        .prize-header {
+            background: linear-gradient(135deg, #1a0033, #0d001a);
+            border-radius: 20px;
+            padding: 12px;
+            margin: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        .big-win {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .player-info {
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* Prize Grid */
+        .prize-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 12px;
+            margin: 10px 0;
+            max-height: 45vh;
+            overflow-y: auto;
+        }
+        .prize-card {
+            background: linear-gradient(135deg, #1e1e2e, #16162a);
+            border-radius: 12px;
+            padding: 10px 5px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.2);
+            position: relative;
+        }
+        .prize-card.crown {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #2a2a3e, #1e1e2e);
+        }
+        .crown-badge {
+            position: absolute;
+            top: -8px;
+            right: 5px;
+            font-size: 14px;
+        }
+        .prize-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .prize-name {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: white;
+        }
+        .prize-amount {
+            font-size: 13px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .prize-percent {
+            font-size: 9px;
+            color: #888;
+        }
+
+        /* Amount Selector & Open Button */
+        .amount-selector {
+            background: #1e1e2e;
+            border-radius: 50px;
+            padding: 10px 15px;
+            margin: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .amount-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .amount-btn {
+            background: #2a2a3e;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .amount-display {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .reset-btn {
+            background: #dc3545;
+        }
+
+        .open-btn {
+            display: block;
+            width: calc(100% - 24px);
+            margin: 10px 12px 15px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Scratch Card Modal */
+        .scratch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .scratch-container {
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+        }
+        .scratch-card {
+            width: 100%;
+            height: 320px;
+            background: linear-gradient(135deg, #555, #333);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255,215,0,0.3);
+            margin-bottom: 20px;
+        }
+        .scratch-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #888,
+                #888 10px,
+                #aaa 10px,
+                #aaa 20px
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        .scratch-cover span {
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 5px black;
+            font-weight: bold;
+        }
+        .scratch-reveal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        .scratch-reveal img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .scratch-reveal h2 {
+            color: #000;
+            font-size: 32px;
+            margin: 5px 0;
+        }
+        .scratch-reveal p {
+            color: #000;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .scratch-card.scratched .scratch-cover {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .scratch-card.scratched .scratch-reveal {
+            opacity: 1;
+        }
+        .close-scratch {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        /* History Modal */
+        .history-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e1e2e;
+            border-radius: 20px;
+            z-index: 1100;
+            display: none;
+            width: 90%;
+            max-width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #FFD700;
+        }
+        .history-header {
+            padding: 15px;
+            background: #2a2a3e;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-header h3 {
+            color: #FFD700;
+        }
+        .close-history {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .history-tabs {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+        }
+        .history-tab {
+            flex: 1;
+            background: #2a2a3e;
+            border: none;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        .history-tab.active {
+            background: #FFD700;
+            color: #000;
+        }
+        .history-list {
+            padding: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background: #2a2a3e;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .history-item.pending { border-left: 3px solid #FFA500; }
+        .history-item.approved { border-left: 3px solid #28a745; }
+        .history-item.rejected { border-left: 3px solid #dc3545; }
+        .history-amount { font-weight: bold; color: #FFD700; }
+        .history-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+        .status-pending { background: #FFA500; color: #000; }
+        .status-approved { background: #28a745; color: white; }
+        .status-rejected { background: #dc3545; color: white; }
+
+        /* Live Withdrawal Scroller */
+        .withdrawal-scroller {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(90deg, #0f0f1a, #1a1a2e, #0f0f1a);
+            border-top: 2px solid #FFD700;
+            padding: 6px 0;
+            overflow: hidden;
+            z-index: 100;
+            border-radius: 15px 15px 0 0;
+        }
+        .scroller-title {
+            text-align: center;
+            font-size: 9px;
+            color: #FFD700;
+            margin-bottom: 3px;
+            letter-spacing: 2px;
+        }
+        .scroller-content {
+            display: flex;
+            animation: scroll 25s linear infinite;
+            white-space: nowrap;
+        }
+        .withdrawal-item {
+            display: inline-flex;
+            align-items: center;
+            background: #0a0a0a;
+            margin: 0 6px;
+            padding: 4px 10px;
+            border-radius: 30px;
+            border-left: 2px solid #28a745;
+            font-size: 10px;
+            gap: 5px;
+        }
+        .withdrawal-item .user {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        .withdrawal-item .amount {
+            color: #28a745;
+            font-weight: bold;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Modal Panels */
+        .modal-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e1e2e;
+            padding: 20px;
+            border-radius: 30px;
+            z-index: 1100;
+            display: none;
+            width: 320px;
+            text-align: center;
+            border: 1px solid #FFD700;
+        }
+        .modal-panel input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            margin: 8px 0;
+        }
+        .modal-panel button {
+            background: #FFD700;
+            color: #000;
+            padding: 10px;
+            border: none;
+            border-radius: 30px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .qr-placeholder {
+            background: white;
+            width: 120px;
+            height: 120px;
+            margin: 10px auto;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .qr-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .overlay-bg {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1050;
+        }
+        .toast-msg {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            z-index: 1200;
+            display: none;
+            font-size: 12px;
+        }
+        .min-amount-text {
+            font-size: 10px;
+            color: #FFA500;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Signup Page -->
+<div id="signupPage" class="auth-container">
+    <div class="auth-box">
+        <h1>🎁 LuckyBox</h1>
+        <p>Create your account</p>
+        <input type="text" id="signupName" placeholder="Full Name">
+        <input type="tel" id="signupMobile" placeholder="Mobile Number" maxlength="10">
+        <input type="password" id="signupPassword" placeholder="Password">
+        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password">
+        <button id="signupBtn">📝 Signup & Get ₹20 Bonus</button>
+        <div class="auth-switch">Already have an account? <span onclick="showLogin()">Login</span></div>
+        <div class="bonus-text">✨ New users get ₹20 FREE signup bonus! ✨</div>
+        <div id="signupError" class="error-text"></div>
+    </div>
+</div>
+
+<!-- Login Page -->
+<div id="loginPage" class="auth-container" style="display:none;">
+    <div class="auth-box">
+        <h1>🎁 LuckyBox</h1>
+        <p>Welcome back!</p>
+        <input type="tel" id="loginMobile" placeholder="Mobile Number" maxlength="10">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="loginBtn">🔐 Login</button>
+        <div class="auth-switch">New user? <span onclick="showSignup()">Signup</span></div>
+        <div id="loginError" class="error-text"></div>
+    </div>
+</div>
+
+<!-- Main App Container -->
+<div id="appContainer" class="app-container">
+    <div class="header">
+        <div class="logo"><h1>🎁 LuckyBox</h1></div>
+        <div class="user-name" id="userNameDisplay"></div>
+        <div class="balance-box">
+            <div class="balance-label">Balance</div>
+            <div class="balance-amount" id="userBalance">₹0</div>
+        </div>
+        <button class="header-btn" id="addMoneyBtn">➕ Add</button>
+        <button class="header-btn withdraw-btn" id="withdrawBtn">💸 Withdraw</button>
+        <button class="header-btn history-btn" id="historyBtn">📜 History</button>
+        <button class="header-btn logout-btn" id="logoutBtn">🚪 Logout</button>
+    </div>
+
+    <div class="prize-header">
+        <div class="big-win" id="topPrizeAmount">🎁 Scratch & Win</div>
+        <div class="player-info">Click OPEN RANDOM BOX to get a scratch card! You ALWAYS win something! 🎉</div>
+    </div>
+
+    <div id="prizeGrid" class="prize-grid"></div>
+
+    <div class="amount-selector">
+        <span style="font-size:13px;">Amount</span>
+        <div class="amount-buttons">
+            <button class="amount-btn reset-btn" data-mult="reset">Reset</button>
+            <button class="amount-btn" data-mult="1">+1</button>
+            <button class="amount-btn" data-mult="5">+5</button>
+            <button class="amount-btn" data-mult="10">+10</button>
+            <button class="amount-btn" data-mult="max">Max</button>
+        </div>
+        <div class="amount-display" id="amountDisplay">₹10x1 = ₹10</div>
+    </div>
+
+    <button class="open-btn" id="randomOpenBtn">🎲 OPEN RANDOM BOX 🎲</button>
+</div>
+
+<!-- Scratch Card Modal -->
+<div id="scratchOverlay" class="scratch-overlay">
+    <div class="scratch-container">
+        <div id="scratchCard" class="scratch-card">
+            <div class="scratch-cover">
+                <span>🔨 SCRATCH HERE 🔨</span>
+            </div>
+            <div class="scratch-reveal">
+                <img id="scratchPrizeImg" src="">
+                <h2 id="scratchPrizeAmount">₹0</h2>
+                <p id="scratchPrizeName">Prize Name</p>
+            </div>
+        </div>
+        <button class="close-scratch" onclick="closeScratchCard()">🎉 Collect Prize & Close 🎉</button>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="history-modal">
+    <div class="history-header">
+        <h3>📜 Transaction History</h3>
+        <button class="close-history" onclick="closeHistoryModal()">✕ Close</button>
+    </div>
+    <div class="history-tabs">
+        <button class="history-tab active" onclick="showHistoryTab('deposit')">💰 Deposits</button>
+        <button class="history-tab" onclick="showHistoryTab('withdraw')">💸 Withdrawals</button>
+    </div>
+    <div id="depositHistoryList" class="history-list"></div>
+    <div id="withdrawHistoryList" class="history-list" style="display:none;"></div>
+</div>
+
+<!-- Live Withdrawal Scroller -->
+<div id="withdrawalScroller" class="withdrawal-scroller">
+    <div class="scroller-title">🔴 LIVE WITHDRAWALS 🔴</div>
+    <div id="scrollerContent" class="scroller-content"></div>
+</div>
+
+<!-- Add Money Panel -->
+<div id="addMoneyPanel" class="modal-panel">
+    <h3>➕ Add Money</h3>
+    <div class="qr-placeholder">
+        <img id="qrCodeImg" src="" alt="QR Code">
+    </div>
+    <p style="font-size:10px;">Scan QR & Pay, then fill details</p>
+    <input type="number" id="addAmount" placeholder="Amount (₹)" min="100">
+    <div class="min-amount-text">⚠️ Min ₹100</div>
+    <input type="text" id="transactionId" placeholder="Transaction ID">
+    <button id="submitPaymentBtn">📤 Submit Request</button>
+    <button id="closeAddMoneyBtn">Close</button>
+    <p id="requestStatus" style="font-size:10px; margin-top:8px; color:#FFA500;"></p>
+</div>
+
+<!-- Withdraw Panel - Updated with Bank Details -->
+<div id="withdrawPanel" class="modal-panel">
+    <h3>💸 Withdraw Money</h3>
+    <p style="font-size:11px;">Min: ₹1 | Max: ₹10,00,000</p>
+    <input type="number" id="withdrawAmount" placeholder="Enter Amount (₹)" min="1" max="1000000">
+    <input type="text" id="accHolderName" placeholder="Account Holder Full Name">
+    <input type="text" id="accNumber" placeholder="Account Number">
+    <input type="text" id="ifscCode" placeholder="IFSC Code">
+    <input type="tel" id="withdrawMobile" placeholder="Mobile Number" maxlength="10">
+    <button id="submitWithdrawBtn">Submit Withdraw Request</button>
+    <button id="closeWithdrawBtn">Cancel</button>
+</div>
+
+<div id="overlayBg" class="overlay-bg"></div>
+<div id="toastMsg" class="toast-msg"></div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBlSMSOzq-lu_3e6pVPsVn5POZ7PhWDJ7g",
+        authDomain: "viniflix-moviex.firebaseapp.com",
+        databaseURL: "https://viniflix-moviex-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "viniflix-moviex",
+        storageBucket: "viniflix-moviex.firebasestorage.app",
+        messagingSenderId: "699982713036",
+        appId: "1:699982713036:web:82bc5b89fbd87ea45fb269"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let userId = null;
+    let userName = null;
+    let userMobile = null;
+    let currentBalance = 0;
+    let currentMultiplier = 1;
+    let basePrice = 10;
+    let allBoxes = [];
+    
+    // Track box openings for "rare box" logic
+    let boxOpenCount = 0;
+    let forceRareBox = false;
+
+    // Default boxes with smart probabilities
+    const defaultBoxes = [
+        { id: "box1", name: "iPhone 17 Pro", amount: 54000, percent: 85, isCrown: true, imageUrl: "https://cdn-icons-png.flaticon.com/512/1055/1055323.png" },
+        { id: "box2", name: "Coffee", amount: 20, percent: 95, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png" },
+        { id: "box3", name: "Lipstick", amount: 50, percent: 90, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/3059/3059931.png" },
+        { id: "box4", name: "Burger", amount: 30, percent: 98, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png" },
+        { id: "box5", name: "EarPods", amount: 1200, percent: 75, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/1213/1213294.png" },
+        { id: "box6", name: "Luxury Watch", amount: 900, percent: 70, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+        { id: "box7", name: "₹100 Cash", amount: 100, percent: 85, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331966.png" },
+        { id: "box8", name: "₹50 Cash", amount: 50, percent: 88, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/489/489689.png" },
+        { id: "box9", name: "₹10 Cash", amount: 10, percent: 92, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040240.png" },
+        { id: "box10", name: "Free Spin", amount: 5, percent: 96, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828884.png" },
+        { id: "box11", name: "₹1 Cash", amount: 1, percent: 99, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/1024/1024095.png" },
+        { id: "box12", name: "Mystery Gift", amount: 200, percent: 65, isCrown: false, imageUrl: "https://cdn-icons-png.flaticon.com/512/2496/2496838.png" }
+    ];
+
+    // Fake withdrawal names
+    const indianNames = ["Rahul Sharma", "Priya Singh", "Virat Kohli", "MS Dhoni", "Rohit Sharma", "Alia Bhatt", "Ranbir Kapoor", "Deepika Padukone", "Akshay Kumar", "Salman Khan", "Shah Rukh Khan", "Aamir Khan", "Katrina Kaif", "Anushka Sharma", "Vicky Kaushal", "Kriti Sanon"];
+    const withdrawalAmounts = [500, 1000, 2000, 500, 1500, 300, 800, 1200, 2500, 750, 1800, 3500, 600, 900, 4200, 1100];
+    
+    function getRandomTime() {
+        let now = new Date();
+        let hours = now.getHours();
+        let minutes = Math.floor(Math.random() * 59);
+        let seconds = Math.floor(Math.random() * 59);
+        return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    }
+    
+    function generateFakeWithdrawal() {
+        let randomName = indianNames[Math.floor(Math.random() * indianNames.length)];
+        let randomAmount = withdrawalAmounts[Math.floor(Math.random() * withdrawalAmounts.length)];
+        return { name: randomName, amount: randomAmount, time: getRandomTime() };
+    }
+    
+    function generateInitialWithdrawals(count) {
+        let items = [];
+        for(let i = 0; i < count; i++) {
+            let wd = generateFakeWithdrawal();
+            items.push(`<div class="withdrawal-item"><span>🎉</span><span class="user">${wd.name}</span><span>withdrew</span><span class="amount">₹${wd.amount}</span><span class="time">${wd.time}</span></div>`);
+        }
+        return items;
+    }
+    
+    function initScroller() {
+        let scroller = document.getElementById('scrollerContent');
+        if(!scroller) return;
+        let initialItems = generateInitialWithdrawals(80);
+        scroller.innerHTML = initialItems.join('');
+    }
+    
+    let withdrawalInterval;
+    function startLiveWithdrawals() {
+        if(withdrawalInterval) clearInterval(withdrawalInterval);
+        withdrawalInterval = setInterval(() => {
+            let scroller = document.getElementById('scrollerContent');
+            if(!scroller) return;
+            let wd = generateFakeWithdrawal();
+            let newItem = `<div class="withdrawal-item"><span>🎉</span><span class="user">${wd.name}</span><span>withdrew</span><span class="amount">₹${wd.amount}</span><span class="time">${wd.time}</span></div>`;
+            scroller.innerHTML += newItem;
+            let items = scroller.children;
+            if(items.length > 120) {
+                for(let i = 0; i < 20; i++) if(items[i]) items[i].remove();
+            }
+        }, 2500);
+    }
+
+    function showLogin() {
+        document.getElementById('signupPage').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+    }
+    function showSignup() {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('signupPage').style.display = 'flex';
+    }
+    window.showLogin = showLogin;
+    window.showSignup = showSignup;
+
+    // Load QR Settings
+    function loadQRSettings() {
+        database.ref('qrSettings').on('value', (snapshot) => {
+            let data = snapshot.val();
+            let qrImg = document.getElementById('qrCodeImg');
+            if(data && data.qrImageUrl && data.qrImageUrl.trim() !== '') {
+                qrImg.src = data.qrImageUrl;
+            } else if(data && data.upiId) {
+                let upiId = data.upiId;
+                let payeeName = data.payeeName || 'LuckyBox';
+                let upiData = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&cu=INR`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiData)}`;
+            } else {
+                qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=yourupi@okhdfcbank&pn=LuckyBox&cu=INR";
+            }
+        });
+    }
+
+    /**
+     * SMART WEIGHTED SELECTION - Balanced for profit and user experience
+     */
+    function getSmartRandomBox() {
+        if(allBoxes.length === 0) return null;
+        
+        let eligibleBoxes = allBoxes.filter(box => box.percent >= 15);
+        
+        if(eligibleBoxes.length === 0) {
+            eligibleBoxes = allBoxes;
+        }
+        
+        let rareBoxes = eligibleBoxes.filter(box => box.percent < 25);
+        let normalBoxes = eligibleBoxes.filter(box => box.percent >= 25);
+        
+        let availableForSelection = [...normalBoxes];
+        
+        if(forceRareBox && rareBoxes.length > 0) {
+            availableForSelection.push(...rareBoxes);
+            forceRareBox = false;
+        }
+        
+        if(availableForSelection.length === 0) {
+            availableForSelection = eligibleBoxes;
+        }
+        
+        let weightedBoxes = [];
+        for(let box of availableForSelection) {
+            let weight = 0;
+            let percent = box.percent;
+            let amount = box.amount;
+            
+            if(percent >= 80) {
+                weight = 80 + (percent - 80) * 2;
+            } else if(percent >= 50) {
+                weight = 30 + (percent - 50) * 1.5;
+            } else if(percent >= 25) {
+                weight = 5 + (percent - 25) * 0.8;
+            } else {
+                weight = 1;
+            }
+            
+            if(amount > 10000) {
+                weight = weight * 0.05;
+            } else if(amount > 5000) {
+                weight = weight * 0.1;
+            } else if(amount > 2000) {
+                weight = weight * 0.2;
+            } else if(amount > 1000) {
+                weight = weight * 0.4;
+            } else if(amount > 500) {
+                weight = weight * 0.6;
+            } else if(amount > 100) {
+                weight = weight * 0.8;
+            }
+            
+            weight = Math.max(1, Math.floor(weight));
+            
+            for(let i = 0; i < weight; i++) {
+                weightedBoxes.push(box);
+            }
+        }
+        
+        let randomIndex = Math.floor(Math.random() * weightedBoxes.length);
+        return weightedBoxes[randomIndex];
+    }
+
+    // Signup
+    document.getElementById('signupBtn').onclick = () => {
+        let name = document.getElementById('signupName').value.trim();
+        let mobile = document.getElementById('signupMobile').value.trim();
+        let password = document.getElementById('signupPassword').value;
+        let confirmPassword = document.getElementById('signupConfirmPassword').value;
+        
+        if(!name) { document.getElementById('signupError').innerHTML = 'Please enter your name'; return; }
+        if(mobile.length !== 10) { document.getElementById('signupError').innerHTML = 'Enter valid 10-digit mobile number'; return; }
+        if(password.length < 4) { document.getElementById('signupError').innerHTML = 'Password must be at least 4 characters'; return; }
+        if(password !== confirmPassword) { document.getElementById('signupError').innerHTML = 'Passwords do not match'; return; }
+        
+        database.ref('users').orderByChild('mobile').equalTo(mobile).once('value', (snapshot) => {
+            if(snapshot.exists()) {
+                document.getElementById('signupError').innerHTML = 'Mobile number already registered!';
+            } else {
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                userName = name;
+                userMobile = mobile;
+                database.ref('users/' + userId).set({ name, mobile, password, balance: 20, totalAddMoney: 0, totalWithdraw: 0, totalWon: 0, totalSpent: 0, createdAt: Date.now() });
+                localStorage.setItem('luckybox_userId', userId);
+                localStorage.setItem('luckybox_userName', userName);
+                localStorage.setItem('luckybox_mobile', mobile);
+                document.getElementById('signupPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('userNameDisplay').innerHTML = '👤 ' + name;
+                
+                let savedCount = localStorage.getItem('luckybox_openCount_' + userId);
+                boxOpenCount = savedCount ? parseInt(savedCount) : 0;
+                
+                loadBalance();
+                loadBoxes();
+                loadHistory();
+                loadQRSettings();
+                initScroller();
+                startLiveWithdrawals();
+                showToast("🎉 Signup successful! ₹20 bonus added!");
+            }
+        });
+    };
+    
+    // Login
+    document.getElementById('loginBtn').onclick = () => {
+        let mobile = document.getElementById('loginMobile').value.trim();
+        let password = document.getElementById('loginPassword').value;
+        if(mobile.length !== 10) { document.getElementById('loginError').innerHTML = 'Enter valid mobile number'; return; }
+        database.ref('users').orderByChild('mobile').equalTo(mobile).once('value', (snapshot) => {
+            if(snapshot.exists()) {
+                let foundUserId = null, userData = null;
+                snapshot.forEach((child) => { foundUserId = child.key; userData = child.val(); });
+                if(userData.password === password) {
+                    userId = foundUserId; userName = userData.name; userMobile = mobile;
+                    localStorage.setItem('luckybox_userId', userId);
+                    localStorage.setItem('luckybox_userName', userName);
+                    localStorage.setItem('luckybox_mobile', mobile);
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('userNameDisplay').innerHTML = '👤 ' + userName;
+                    
+                    let savedCount = localStorage.getItem('luckybox_openCount_' + userId);
+                    boxOpenCount = savedCount ? parseInt(savedCount) : 0;
+                    
+                    loadBalance();
+                    loadBoxes();
+                    loadHistory();
+                    loadQRSettings();
+                    initScroller();
+                    startLiveWithdrawals();
+                    showToast("✅ Welcome back!");
+                } else { document.getElementById('loginError').innerHTML = 'Wrong password!'; }
+            } else { document.getElementById('loginError').innerHTML = 'Mobile number not registered!'; }
+        });
+    };
+    
+    // Logout
+    document.getElementById('logoutBtn').onclick = () => {
+        if(withdrawalInterval) clearInterval(withdrawalInterval);
+        localStorage.clear();
+        userId = null;
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        showToast("Logged out!");
+    };
+    
+    function checkExistingSession() {
+        let savedUserId = localStorage.getItem('luckybox_userId');
+        let savedUserName = localStorage.getItem('luckybox_userName');
+        let savedMobile = localStorage.getItem('luckybox_mobile');
+        if(savedUserId && savedUserName) {
+            userId = savedUserId; userName = savedUserName; userMobile = savedMobile;
+            document.getElementById('signupPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('userNameDisplay').innerHTML = '👤 ' + userName;
+            
+            let savedCount = localStorage.getItem('luckybox_openCount_' + userId);
+            boxOpenCount = savedCount ? parseInt(savedCount) : 0;
+            
+            loadBalance();
+            loadBoxes();
+            loadHistory();
+            loadQRSettings();
+            initScroller();
+            startLiveWithdrawals();
+        }
+    }
+    
+    function loadBalance() {
+        database.ref('users/' + userId + '/balance').on('value', (snapshot) => {
+            currentBalance = snapshot.val() || 0;
+            document.getElementById('userBalance').innerHTML = '₹' + currentBalance;
+        });
+    }
+    
+    function loadBoxes() {
+        database.ref('mysteryBoxes').once('value', (snapshot) => {
+            let data = snapshot.val();
+            if(data && data.boxes && data.boxes.length > 0) {
+                allBoxes = data.boxes;
+            } else {
+                allBoxes = defaultBoxes;
+                database.ref('mysteryBoxes').set({ boxes: defaultBoxes });
+            }
+            renderBoxes();
+            if(allBoxes.length > 0) {
+                let topBox = [...allBoxes].sort((a,b) => b.amount - a.amount)[0];
+                if(topBox) document.getElementById('topPrizeAmount').innerHTML = '🎁 ' + topBox.name + ' - ₹' + topBox.amount;
+            }
+        });
+    }
+    
+    function renderBoxes() {
+        let container = document.getElementById('prizeGrid');
+        container.innerHTML = '';
+        allBoxes.forEach(box => {
+            let card = document.createElement('div');
+            card.className = `prize-card ${box.isCrown ? 'crown' : ''}`;
+            card.innerHTML = `
+                ${box.isCrown ? '<span class="crown-badge">👑</span>' : ''}
+                <img class="prize-img" src="${box.imageUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1040/1040240.png'">
+                <div class="prize-name">${box.name}</div>
+                <div class="prize-amount">₹${box.amount}</div>
+                <div class="prize-percent">Win: ${box.percent}%</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+    
+    // Open Random Box with Smart Selection
+    document.getElementById('randomOpenBtn').onclick = () => {
+        if(allBoxes.length === 0) {
+            showToast("No boxes available!");
+            return;
+        }
+        
+        let cost = basePrice * currentMultiplier;
+        if(currentBalance < cost) {
+            showToast("❌ Insufficient balance! Add money.");
+            return;
+        }
+        
+        boxOpenCount++;
+        localStorage.setItem('luckybox_openCount_' + userId, boxOpenCount);
+        
+        if(boxOpenCount % 20 === 0) {
+            forceRareBox = true;
+        }
+        
+        let selectedBox = getSmartRandomBox();
+        
+        if(!selectedBox) {
+            selectedBox = allBoxes[0];
+        }
+        
+        let winAmount = selectedBox.amount * currentMultiplier;
+        
+        currentBalance = currentBalance - cost + winAmount;
+        
+        database.ref('users/' + userId + '/balance').set(currentBalance);
+        
+        showScratchCard(selectedBox, winAmount, cost);
+        
+        database.ref('wins').push({
+            userId, userName, amount: winAmount, boxName: selectedBox.name,
+            won: true, cost: cost, multiplier: currentMultiplier, timestamp: Date.now()
+        });
+        
+        database.ref('users/' + userId + '/totalWon').once('value', (snap) => {
+            database.ref('users/' + userId + '/totalWon').set((snap.val()||0) + winAmount);
+        });
+        
+        database.ref('users/' + userId + '/totalSpent').once('value', (snap) => {
+            database.ref('users/' + userId + '/totalSpent').set((snap.val()||0) + cost);
+        });
+        
+        showToast(`🎉 You won ₹${winAmount}! Scratch your card! 🎉`);
+    };
+    
+    // Show Scratch Card
+    function showScratchCard(box, winAmount, cost) {
+        let overlay = document.getElementById('scratchOverlay');
+        let scratchCard = document.getElementById('scratchCard');
+        
+        scratchCard.classList.remove('scratched');
+        
+        document.getElementById('scratchPrizeImg').src = box.imageUrl;
+        document.getElementById('scratchPrizeAmount').innerHTML = `₹${winAmount}`;
+        document.getElementById('scratchPrizeName').innerHTML = `🎉 You won ${box.name}! 🎉`;
+        
+        overlay.style.display = 'flex';
+        
+        let cover = scratchCard.querySelector('.scratch-cover');
+        let newCover = cover.cloneNode(true);
+        cover.parentNode.replaceChild(newCover, cover);
+        
+        newCover.onclick = () => {
+            scratchCard.classList.add('scratched');
+        };
+    }
+    
+    function closeScratchCard() {
+        document.getElementById('scratchOverlay').style.display = 'none';
+    }
+    
+    // Amount selector
+    document.querySelectorAll('.amount-btn').forEach(btn => {
+        btn.onclick = () => {
+            let mult = btn.getAttribute('data-mult');
+            if(mult === 'reset') currentMultiplier = 1;
+            else if(mult === '1') currentMultiplier = Math.min(currentMultiplier + 1, 100);
+            else if(mult === '5') currentMultiplier = Math.min(currentMultiplier + 5, 100);
+            else if(mult === '10') currentMultiplier = Math.min(currentMultiplier + 10, 100);
+            else if(mult === 'max') currentMultiplier = 100;
+            let totalAmount = basePrice * currentMultiplier;
+            document.getElementById('amountDisplay').innerHTML = `₹${basePrice}x${currentMultiplier} = ₹${totalAmount}`;
+        };
+    });
+    
+    // Load History
+    function loadHistory() {
+        database.ref('paymentRequests/' + userId).on('value', (snapshot) => {
+            let data = snapshot.val();
+            let depositContainer = document.getElementById('depositHistoryList');
+            depositContainer.innerHTML = '';
+            if(data) {
+                let item = document.createElement('div');
+                item.className = `history-item ${data.status}`;
+                item.innerHTML = `
+                    <div><span class="history-amount">₹${data.amount}</span></div>
+                    <div><span class="history-status status-${data.status}">${data.status.toUpperCase()}</span></div>
+                    <div class="history-time">${data.transactionId || 'N/A'}</div>
+                    <div class="history-time">${new Date(data.createdAt).toLocaleString()}</div>
+                `;
+                depositContainer.appendChild(item);
+            } else {
+                depositContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No deposit history</div>';
+            }
+        });
+        
+        database.ref('withdrawRequests').orderByChild('userId').equalTo(userId).on('value', (snapshot) => {
+            let requests = snapshot.val();
+            let withdrawContainer = document.getElementById('withdrawHistoryList');
+            withdrawContainer.innerHTML = '';
+            if(requests) {
+                Object.entries(requests).forEach(([key, data]) => {
+                    let item = document.createElement('div');
+                    item.className = `history-item ${data.status}`;
+                    item.innerHTML = `
+                        <div><span class="history-amount">₹${data.amount}</span></div>
+                        <div><span class="history-status status-${data.status}">${data.status.toUpperCase()}</span></div>
+                        <div class="history-time">${data.accNumber ? data.accNumber.substring(0,6)+'...' : 'N/A'}</div>
+                        <div class="history-time">${new Date(data.timestamp).toLocaleString()}</div>
+                    `;
+                    withdrawContainer.appendChild(item);
+                });
+            } else {
+                withdrawContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No withdrawal history</div>';
+            }
+        });
+    }
+    
+    function showHistoryTab(tab) {
+        document.querySelectorAll('.history-tab').forEach(t => t.classList.remove('active'));
+        if(tab === 'deposit') {
+            document.querySelector('.history-tab:first-child').classList.add('active');
+            document.getElementById('depositHistoryList').style.display = 'block';
+            document.getElementById('withdrawHistoryList').style.display = 'none';
+        } else {
+            document.querySelector('.history-tab:last-child').classList.add('active');
+            document.getElementById('depositHistoryList').style.display = 'none';
+            document.getElementById('withdrawHistoryList').style.display = 'block';
+        }
+    }
+    
+    function closeHistoryModal() {
+        document.getElementById('historyModal').style.display = 'none';
+        document.getElementById('overlayBg').style.display = 'none';
+    }
+    
+    document.getElementById('historyBtn').onclick = () => {
+        document.getElementById('historyModal').style.display = 'block';
+        document.getElementById('overlayBg').style.display = 'block';
+        loadHistory();
+    };
+    
+    // Payment submit
+    document.getElementById('submitPaymentBtn').onclick = () => {
+        let amount = parseInt(document.getElementById('addAmount').value);
+        let transactionId = document.getElementById('transactionId').value.trim();
+        if(!amount || amount < 100) { showToast("❌ Minimum add amount is ₹100!"); return; }
+        if(!transactionId) { showToast("❌ Enter Transaction ID"); return; }
+        database.ref('paymentRequests/' + userId).set({
+            amount, transactionId, userId, userName: userName,
+            mobile: localStorage.getItem('luckybox_mobile') || '',
+            status: 'pending', createdAt: Date.now()
+        });
+        showToast("✅ Payment request submitted!");
+        document.getElementById('addAmount').value = '';
+        document.getElementById('transactionId').value = '';
+        document.getElementById('addMoneyPanel').style.display = 'none';
+        document.getElementById('overlayBg').style.display = 'none';
+        loadHistory();
+    };
+    
+    // NEW WITHDRAW FUNCTION - With Bank Details & Deduct Balance
+    async function submitWithdrawRequest() {
+        let amount = parseInt(document.getElementById('withdrawAmount').value);
+        let accHolderName = document.getElementById('accHolderName').value.trim();
+        let accNumber = document.getElementById('accNumber').value.trim();
+        let ifscCode = document.getElementById('ifscCode').value.trim().toUpperCase();
+        let mobile = document.getElementById('withdrawMobile').value.trim();
+        
+        // Validations
+        if(isNaN(amount) || amount < 1) {
+            showToast("❌ Minimum withdrawal amount is ₹1");
+            return;
+        }
+        if(amount > 1000000) {
+            showToast("❌ Maximum withdrawal amount is ₹10,00,000");
+            return;
+        }
+        if(amount > currentBalance) {
+            showToast("❌ Insufficient balance! You have ₹" + currentBalance);
+            return;
+        }
+        if(!accHolderName) {
+            showToast("❌ Please enter Account Holder Name");
+            return;
+        }
+        if(!accNumber || accNumber.length < 9) {
+            showToast("❌ Please enter valid Account Number");
+            return;
+        }
+        if(!ifscCode || ifscCode.length < 4) {
+            showToast("❌ Please enter valid IFSC Code");
+            return;
+        }
+        if(!mobile || mobile.length !== 10) {
+            showToast("❌ Please enter valid 10-digit Mobile Number");
+            return;
+        }
+        
+        // DEDUCT BALANCE FIRST
+        let newBalance = currentBalance - amount;
+        
+        // Save withdrawal request to Firebase with all details
+        let withdrawRef = database.ref('withdrawRequests').push();
+        await withdrawRef.set({
+            userId: userId,
+            userName: userName,
+            userMobile: userMobile,
+            amount: amount,
+            accHolderName: accHolderName,
+            accNumber: accNumber,
+            ifscCode: ifscCode,
+            mobile: mobile,
+            status: 'pending',
+            timestamp: Date.now()
+        });
+        
+        // Update user's balance in Firebase
+        await database.ref('users/' + userId + '/balance').set(newBalance);
+        
+        // Update total withdrawn amount
+        database.ref('users/' + userId + '/totalWithdraw').once('value', (snap) => {
+            let currentTotal = snap.val() || 0;
+            database.ref('users/' + userId + '/totalWithdraw').set(currentTotal + amount);
+        });
+        
+        // Update current balance variable
+        currentBalance = newBalance;
+        
+        showToast("✅ Withdrawal request submitted! Amount deducted from balance. Admin will process within 24 hours.");
+        
+        // Clear form
+        document.getElementById('withdrawAmount').value = '';
+        document.getElementById('accHolderName').value = '';
+        document.getElementById('accNumber').value = '';
+        document.getElementById('ifscCode').value = '';
+        document.getElementById('withdrawMobile').value = '';
+        
+        // Close panel
+        closeWithdrawPanel();
+        
+        // Refresh history
+        loadHistory();
+    }
+    
+    function closeWithdrawPanel() {
+        document.getElementById('withdrawPanel').style.display = 'none';
+        document.getElementById('overlayBg').style.display = 'none';
+    }
+    
+    function openWithdrawPanel() {
+        document.getElementById('withdrawPanel').style.display = 'block';
+        document.getElementById('overlayBg').style.display = 'block';
+    }
+    
+    document.getElementById('addMoneyBtn').onclick = () => { 
+        document.getElementById('addMoneyPanel').style.display = 'block'; 
+        document.getElementById('overlayBg').style.display = 'block';
+        loadQRSettings();
+    };
+    document.getElementById('closeAddMoneyBtn').onclick = () => { document.getElementById('addMoneyPanel').style.display = 'none'; document.getElementById('overlayBg').style.display = 'none'; };
+    document.getElementById('withdrawBtn').onclick = () => { openWithdrawPanel(); };
+    document.getElementById('closeWithdrawBtn').onclick = () => { closeWithdrawPanel(); };
+    document.getElementById('submitWithdrawBtn').onclick = () => { submitWithdrawRequest(); };
+    
+    function showToast(msg) {
+        let toast = document.getElementById('toastMsg');
+        toast.innerText = msg;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+    
+    window.closeScratchCard = closeScratchCard;
+    window.closeWithdrawPanel = closeWithdrawPanel;
+    window.showHistoryTab = showHistoryTab;
+    window.closeHistoryModal = closeHistoryModal;
+    
+    checkExistingSession();
+</script>
+</body>
+</html>
